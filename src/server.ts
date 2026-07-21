@@ -15,7 +15,7 @@ app.use('/api', router);
 const PORT = process.env.PORT || 3333;
 
 app.get('/', (req, res) => {
-  res.json({ message: 'API do MindBlog está rodando 🚀' });
+  res.json({ message: 'API do MindBlog está rodando' });
 });
 
 app.listen(PORT, () => {
