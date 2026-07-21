@@ -41,9 +41,9 @@ export class UserController {
         message: "Usuário criado com sucesso!",
         user: userWithoutPassword,
       });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Erro interno do servidor." });
+    } catch (error: any) {
+      console.error('Erro em register:', error);
+      res.status(500).json({ error: error?.message || 'Erro interno do servidor.' });
     }
   }
 
@@ -87,9 +87,9 @@ export class UserController {
         user: userWithoutPassword,
         token,
       });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Erro interno do servidor." });
+    } catch (error: any) {
+      console.error('Erro em login:', error);
+      res.status(500).json({ error: error?.message || 'Erro interno do servidor.' });
     }
   }
 }
