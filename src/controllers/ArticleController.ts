@@ -8,7 +8,7 @@ export class ArticleController {
         orderBy: { publishedAt: "desc" },
         include: {
           author: {
-            select: { name: true, email: true },
+            select: { id: true, name: true, email: true },
           },
         },
       });
@@ -51,7 +51,7 @@ export class ArticleController {
         where: { id: Number(id) },
         include: {
           author: {
-            select: { name: true, email: true },
+            select: { id: true, name: true, email: true },
           },
         },
       });
