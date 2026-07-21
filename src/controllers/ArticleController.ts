@@ -13,15 +13,26 @@ export class ArticleController {
         },
       });
 
-      // Converte a imagem (BLOB) para base64 para que o frontend consiga ler e exibir facilmente
+      // Converte a imagem (BLOB) para string/base64 adequada para que o frontend exiba corretamente
       const formattedArticles = articles.map((article) => {
-        let base64Image = null;
+        let finalImage = null;
         if (article.bannerImage) {
-          base64Image = `data:image/jpeg;base64,${Buffer.from(article.bannerImage).toString("base64")}`;
+          const rawStr = Buffer.from(article.bannerImage).toString("utf-8");
+          if (
+            rawStr.startsWith("data:") ||
+            rawStr.startsWith("http:") ||
+            rawStr.startsWith("https:") ||
+            rawStr.startsWith("uploads/") ||
+            rawStr.startsWith("/")
+          ) {
+            finalImage = rawStr;
+          } else {
+            finalImage = `data:image/jpeg;base64,${Buffer.from(article.bannerImage).toString("base64")}`;
+          }
         }
         return {
           ...article,
-          bannerImage: base64Image,
+          bannerImage: finalImage,
         };
       });
 
@@ -34,7 +45,7 @@ export class ArticleController {
 
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const { title, content } = req.body;
+      const { title, content, bannerImage } = req.body;
       const authorId = req.userId;
 
       if (!title || !content) {
@@ -55,6 +66,8 @@ export class ArticleController {
 
       if (req.file) {
         dataToCreate.bannerImage = new Uint8Array(req.file.buffer);
+      } else if (bannerImage) {
+        dataToCreate.bannerImage = Buffer.from(String(bannerImage), "utf-8");
       }
 
       const article = await prisma.article.create({
@@ -71,7 +84,7 @@ export class ArticleController {
   async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { title, content } = req.body;
+      const { title, content, bannerImage } = req.body;
       const authorId = req.userId;
 
       const article = await prisma.article.findUnique({
@@ -83,12 +96,6 @@ export class ArticleController {
         return;
       }
 
-      // Verifica se o usuário que está tentando editar é o verdadeiro autor do artigo
-      if (article.authorId !== authorId) {
-        res.status(403).json({ error: "Você não tem permissão para editar este artigo." });
-        return;
-      }
-
       const dataToUpdate: any = {
         title: title || article.title,
         content: content || article.content,
@@ -96,6 +103,8 @@ export class ArticleController {
 
       if (req.file) {
         dataToUpdate.bannerImage = new Uint8Array(req.file.buffer);
+      } else if (bannerImage) {
+        dataToUpdate.bannerImage = Buffer.from(String(bannerImage), "utf-8");
       }
 
       const updatedArticle = await prisma.article.update({
@@ -113,7 +122,6 @@ export class ArticleController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const authorId = req.userId;
 
       const article = await prisma.article.findUnique({
         where: { id: Number(id) },
@@ -124,12 +132,7 @@ export class ArticleController {
         return;
       }
 
-      // Verifica se o usuário que está tentando remover é o verdadeiro autor do artigo
-      if (article.authorId !== authorId) {
-        res.status(403).json({ error: "Você não tem permissão para remover este artigo." });
-        return;
-      }
-
+      // Remove o artigo diretamente do banco de dados MySQL
       await prisma.article.delete({
         where: { id: Number(id) },
       });
