@@ -8,17 +8,17 @@ const router = Router();
 const userController = new UserController();
 const articleController = new ArticleController();
 
-// Configure multer to store files in memory as Buffers (for BLOBs)
+// Configura o multer para armazenar as imagens temporariamente na memória (necessário para salvar como BLOB no MySQL)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// User Routes
+// Rotas de Usuário (Autenticação)
 router.post("/users/register", userController.register);
 router.post("/users/login", userController.login);
 
-// Public Article Route (Listing)
+// Rota Pública de Artigos (Qualquer um pode ver a listagem)
 router.get("/articles", articleController.index);
 
-// Protected Article Routes (CRUD)
+// Rotas Protegidas de Artigos (CRUD) - Exigem que o usuário esteja logado (authMiddleware)
 router.post("/articles", authMiddleware, upload.single("bannerImage"), articleController.create);
 router.put("/articles/:id", authMiddleware, upload.single("bannerImage"), articleController.update);
 router.delete("/articles/:id", authMiddleware, articleController.delete);

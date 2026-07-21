@@ -13,7 +13,7 @@ export class ArticleController {
         },
       });
 
-      // Convert bannerImage to base64 if it exists so the frontend can easily display it
+      // Converte a imagem (BLOB) para base64 para que o frontend consiga ler e exibir facilmente
       const formattedArticles = articles.map((article) => {
         let base64Image = null;
         if (article.bannerImage) {
@@ -83,7 +83,7 @@ export class ArticleController {
         return;
       }
 
-      // Check ownership
+      // Verifica se o usuário que está tentando editar é o verdadeiro autor do artigo
       if (article.authorId !== authorId) {
         res.status(403).json({ error: "Você não tem permissão para editar este artigo." });
         return;
@@ -124,7 +124,7 @@ export class ArticleController {
         return;
       }
 
-      // Check ownership
+      // Verifica se o usuário que está tentando remover é o verdadeiro autor do artigo
       if (article.authorId !== authorId) {
         res.status(403).json({ error: "Você não tem permissão para remover este artigo." });
         return;

@@ -15,9 +15,9 @@ app.use('/api', router);
 const PORT = process.env.PORT || 3333;
 
 app.get('/', (req, res) => {
-  res.json({ message: 'MindBlog API is running 🚀' });
+  res.json({ message: 'API do MindBlog está rodando 🚀' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

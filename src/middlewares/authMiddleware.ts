@@ -20,8 +20,9 @@ export function authMiddleware(
   }
 
   const parts = authorization.split(" ");
+  // O token deve ter duas partes: 'Bearer' e o hash longo do token em si
   if (parts.length !== 2) {
-    res.status(401).json({ error: "Token format error" });
+    res.status(401).json({ error: "Formato do token está incorreto" });
     return;
   }
 

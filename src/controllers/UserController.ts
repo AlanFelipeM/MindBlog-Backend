@@ -13,7 +13,7 @@ export class UserController {
         return;
       }
 
-      // Check if user already exists
+      // Verifica se o usuário já existe no banco
       const userExists = await prisma.user.findUnique({
         where: { email },
       });
@@ -23,7 +23,7 @@ export class UserController {
         return;
       }
 
-      // Hash the password (cost factor 10 is standard)
+      // Criptografa a senha (o fator 10 é o padrão seguro)
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = await prisma.user.create({
@@ -34,7 +34,7 @@ export class UserController {
         },
       });
 
-      // Remove password from the response
+      // Remove a senha do objeto antes de enviar a resposta para segurança
       const { password: _, ...userWithoutPassword } = user;
 
       res.status(201).json({
@@ -56,7 +56,7 @@ export class UserController {
         return;
       }
 
-      // Find user
+      // Busca o usuário no banco de dados
       const user = await prisma.user.findUnique({
         where: { email },
       });
@@ -66,7 +66,7 @@ export class UserController {
         return;
       }
 
-      // Check password
+      // Verifica se a senha enviada bate com a senha criptografada
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (!passwordMatch) {
@@ -74,7 +74,7 @@ export class UserController {
         return;
       }
 
-      // Generate JWT Token
+      // Gera o token JWT para manter o usuário logado
       const secret = process.env.JWT_SECRET || "mindblog_secret_key";
       const token = jwt.sign({ id: user.id }, secret, {
         expiresIn: "1d",
