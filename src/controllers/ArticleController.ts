@@ -43,6 +43,52 @@ export class ArticleController {
     }
   }
 
+  async show(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const article = await prisma.article.findUnique({
+        where: { id: Number(id) },
+        include: {
+          author: {
+            select: { name: true, email: true },
+          },
+        },
+      });
+
+      if (!article) {
+        res.status(404).json({ error: "Artigo não encontrado." });
+        return;
+      }
+
+      let finalImage = null;
+      if (article.bannerImage) {
+        const rawStr = Buffer.from(article.bannerImage).toString("utf-8");
+        if (
+          rawStr.startsWith("data:") ||
+          rawStr.startsWith("http:") ||
+          rawStr.startsWith("https:") ||
+          rawStr.startsWith("uploads/") ||
+          rawStr.startsWith("/")
+        ) {
+          finalImage = rawStr;
+        } else {
+          finalImage = `data:image/jpeg;base64,${Buffer.from(article.bannerImage).toString("base64")}`;
+        }
+      }
+
+      const formattedArticle = {
+        ...article,
+        bannerImage: finalImage,
+      };
+
+      res.status(200).json(formattedArticle);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao buscar o artigo." });
+    }
+  }
+
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { title, content, bannerImage } = req.body;

@@ -15,8 +15,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post("/users/register", userController.register);
 router.post("/users/login", userController.login);
 
-// Rota Pública de Artigos (Qualquer um pode ver a listagem)
+// Rota Pública de Artigos (Qualquer um pode ver a listagem ou um artigo específico)
 router.get("/articles", articleController.index);
+router.get("/articles/:id", articleController.show);
 
 // Rotas Protegidas de Artigos (CRUD) - Exigem que o usuário esteja logado (authMiddleware)
 router.post("/articles", authMiddleware, upload.single("bannerImage"), articleController.create);
