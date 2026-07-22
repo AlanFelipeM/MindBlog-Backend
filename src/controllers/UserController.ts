@@ -3,21 +3,22 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../database/prisma.js";
 
-export class UserController {
-  private formatAvatar(avatarBlob: any): string | null {
-    if (!avatarBlob) return null;
-    const rawStr = Buffer.from(avatarBlob).toString("utf-8");
-    if (
-      rawStr.startsWith("data:") ||
-      rawStr.startsWith("http:") ||
-      rawStr.startsWith("https:") ||
-      rawStr.startsWith("uploads/") ||
-      rawStr.startsWith("/")
-    ) {
-      return rawStr;
-    }
-    return `data:image/jpeg;base64,${Buffer.from(avatarBlob).toString("base64")}`;
+function formatAvatar(avatarBlob: any): string | null {
+  if (!avatarBlob) return null;
+  const rawStr = Buffer.from(avatarBlob).toString("utf-8");
+  if (
+    rawStr.startsWith("data:") ||
+    rawStr.startsWith("http:") ||
+    rawStr.startsWith("https:") ||
+    rawStr.startsWith("uploads/") ||
+    rawStr.startsWith("/")
+  ) {
+    return rawStr;
   }
+  return `data:image/jpeg;base64,${Buffer.from(avatarBlob).toString("base64")}`;
+}
+
+export class UserController {
 
   async register(req: Request, res: Response): Promise<void> {
     try {
@@ -54,7 +55,7 @@ export class UserController {
 
       res.status(201).json({
         message: "Usuário criado com sucesso!",
-        user: { ...userWithoutPassword, avatar: this.formatAvatar(user.avatar) },
+        user: { ...userWithoutPassword, avatar: formatAvatar(user.avatar) },
       });
     } catch (error: any) {
       console.error('Erro em register:', error);
@@ -104,7 +105,7 @@ export class UserController {
 
       res.status(200).json({
         message: "Login realizado com sucesso!",
-        user: { ...userWithoutPassword, avatar: this.formatAvatar(user.avatar) },
+        user: { ...userWithoutPassword, avatar: formatAvatar(user.avatar) },
         token,
       });
     } catch (error: any) {
@@ -195,7 +196,7 @@ export class UserController {
 
       res.status(200).json({
         message: "Perfil atualizado com sucesso!",
-        user: { ...userWithoutPassword, avatar: this.formatAvatar(updatedUser.avatar) },
+        user: { ...userWithoutPassword, avatar: formatAvatar(updatedUser.avatar) },
       });
     } catch (error: any) {
       console.error("Erro ao atualizar usuário:", error);
