@@ -1,6 +1,5 @@
 -- ==========================================================
 -- MindBlog - Dump do Banco de Dados MySQL (TiDB Cloud)
--- Case Estágio Dev 2026 - Mind Group / Mind Consulting
 -- ==========================================================
 
 CREATE DATABASE IF NOT EXISTS `mindblog` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
