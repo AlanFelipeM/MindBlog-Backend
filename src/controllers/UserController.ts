@@ -109,40 +109,41 @@ export class UserController {
       const userId = req.userId;
       const rawEmail = (req.body?.email || req.query?.email) ? String(req.body?.email || req.query?.email).trim() : '';
 
-      let deletedCount = 0;
+      console.log(`[DELETE USER ATTEMPT] userId=${userId}, rawEmail=${rawEmail}`);
 
-      // 1. Apaga por userId se fornecido no JWT
-      if (userId) {
-        await prisma.article.deleteMany({ where: { authorId: userId } });
-        try {
-          await prisma.user.delete({ where: { id: userId } });
-          deletedCount++;
-        } catch (e) {
-          // Ignora se já tiver sido removido
-        }
+      // Encontra todos os usuários correspondentes por ID ou por E-mail
+      const usersToDelete = await prisma.user.findMany({
+        where: {
+          OR: [
+            ...(userId ? [{ id: userId }] : []),
+            ...(rawEmail ? [{ email: rawEmail }] : []),
+          ],
+        },
+      });
+
+      if (usersToDelete.length === 0) {
+        res.status(200).json({ message: "Nenhum usuário encontrado para exclusão." });
+        return;
       }
 
-      // 2. Apaga por E-mail (garante remoção mesmo para contas criadas em qualquer momento)
-      if (rawEmail) {
-        const usersFound = await prisma.user.findMany({
-          where: { email: rawEmail },
-        });
+      const userIds = usersToDelete.map((u) => u.id);
 
-        for (const u of usersFound) {
-          await prisma.article.deleteMany({ where: { authorId: u.id } });
-          try {
-            await prisma.user.delete({ where: { id: u.id } });
-            deletedCount++;
-          } catch (e) {
-            // Ignora duplicados já apagados
-          }
-        }
-      }
+      // Apaga artigos e usuários em transação atômica garantindo que restrições de chave estrangeira não impeçam a remoção
+      await prisma.$transaction([
+        prisma.article.deleteMany({
+          where: { authorId: { in: userIds } },
+        }),
+        prisma.user.deleteMany({
+          where: { id: { in: userIds } },
+        }),
+      ]);
 
-      res.status(200).json({ message: "Conta excluída com sucesso.", deletedCount });
+      console.log(`[DELETE USER ATOMIC SUCCESS] userIds=${userIds.join(',')}`);
+
+      res.status(200).json({ message: "Conta excluída com sucesso do banco de dados.", userIds });
     } catch (error: any) {
       console.error('Erro ao excluir conta de usuário:', error);
-      res.status(500).json({ error: "Erro ao excluir conta do sistema." });
+      res.status(500).json({ error: "Erro ao excluir conta do sistema: " + (error?.message || '') });
     }
   }
 }
