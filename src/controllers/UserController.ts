@@ -107,7 +107,7 @@ export class UserController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.userId;
-      const rawEmail = req.body?.email ? String(req.body.email).trim() : '';
+      const rawEmail = (req.body?.email || req.query?.email) ? String(req.body?.email || req.query?.email).trim() : '';
 
       let deletedCount = 0;
 
@@ -122,7 +122,7 @@ export class UserController {
         }
       }
 
-      // 2. Apaga por E-mail (garante remoção mesmo para contas antigas ou criadas em sessões anteriores)
+      // 2. Apaga por E-mail (garante remoção mesmo para contas criadas em qualquer momento)
       if (rawEmail) {
         const usersFound = await prisma.user.findMany({
           where: { email: rawEmail },
