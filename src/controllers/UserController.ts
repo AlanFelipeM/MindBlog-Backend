@@ -175,11 +175,12 @@ export class UserController {
       const dataToUpdate: any = {};
       if (name) dataToUpdate.name = name;
 
-      if (req.file) {
-        dataToUpdate.avatar = new Uint8Array(req.file.buffer);
-      } else if (avatar !== undefined) {
+      if (avatar !== undefined) {
         if (avatar === null || avatar === '') {
           dataToUpdate.avatar = null;
+        } else if (typeof avatar === 'string' && avatar.startsWith('data:image')) {
+          const base64Data = avatar.split(',')[1];
+          dataToUpdate.avatar = Buffer.from(base64Data, "base64");
         } else {
           dataToUpdate.avatar = Buffer.from(String(avatar), "utf-8");
         }

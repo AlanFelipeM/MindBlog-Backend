@@ -16,7 +16,7 @@ router.post("/users/register", userController.register);
 router.post("/users/login", userController.login);
 router.delete("/users/me", authMiddleware, userController.delete);
 router.post("/users/delete", userController.delete);
-router.put("/users/me", authMiddleware, upload.single("avatar"), userController.update);
+router.put("/users/me", authMiddleware, userController.update);
 
 // Rota Pública de Artigos (Qualquer um pode ver a listagem ou um artigo específico)
 router.get("/articles", articleController.index);
