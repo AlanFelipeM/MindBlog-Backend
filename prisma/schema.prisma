@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,12 +16,12 @@ model User {
 }
 
 model Article {
-  id              Int      @id @default(autoincrement())
-  title           String
-  content         String   @db.Text
-  bannerImage     Bytes?   
-  publishedAt     DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  authorId        Int
-  author          User     @relation(fields: [authorId], references: [id])
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  bannerImage Bytes?   
+  publishedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
