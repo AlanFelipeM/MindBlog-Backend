@@ -107,47 +107,42 @@ export class UserController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.userId;
-      const { email } = req.body || {};
+      const rawEmail = req.body?.email ? String(req.body.email).trim() : '';
 
-      if (!userId && !email) {
-        res.status(400).json({ error: "Identificação do usuário necessária para exclusão." });
-        return;
+      let deletedCount = 0;
+
+      // 1. Apaga por userId se fornecido no JWT
+      if (userId) {
+        await prisma.article.deleteMany({ where: { authorId: userId } });
+        try {
+          await prisma.user.delete({ where: { id: userId } });
+          deletedCount++;
+        } catch (e) {
+          // Ignora se já tiver sido removido
+        }
       }
 
-      // Busca o usuário no MySQL por ID ou por E-mail
-      const user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            ...(userId ? [{ id: userId }] : []),
-            ...(email ? [{ email }] : []),
-          ],
-        },
-      });
+      // 2. Apaga por E-mail (garante remoção mesmo para contas antigas ou criadas em sessões anteriores)
+      if (rawEmail) {
+        const usersFound = await prisma.user.findMany({
+          where: { email: rawEmail },
+        });
 
-      if (!user) {
-        res.status(444).json({ message: "Usuário já foi removido ou não encontrado." });
-        return;
+        for (const u of usersFound) {
+          await prisma.article.deleteMany({ where: { authorId: u.id } });
+          try {
+            await prisma.user.delete({ where: { id: u.id } });
+            deletedCount++;
+          } catch (e) {
+            // Ignora duplicados já apagados
+          }
+        }
       }
 
-      // Remove os artigos vinculados ao usuário antes de remover a conta
-      await prisma.article.deleteMany({
-        where: { authorId: user.id },
-      });
-
-      // Remove a conta do usuário do banco de dados MySQL
-      await prisma.user.delete({
-        where: { id: user.id },
-      });
-
-      res.status(200).json({ message: "Conta excluída com sucesso." });
+      res.status(200).json({ message: "Conta excluída com sucesso.", deletedCount });
     } catch (error: any) {
       console.error('Erro ao excluir conta de usuário:', error);
-      const isDbError = String(error?.message).includes('prisma') || String(error?.message).includes('database') || String(error?.message).includes('Can\'t reach');
-      res.status(500).json({ 
-        error: isDbError 
-          ? "Serviço de banco de dados temporariamente indisponível. Tente novamente em instantes." 
-          : (error?.message || "Erro ao excluir conta.") 
-      });
+      res.status(500).json({ error: "Erro ao excluir conta do sistema." });
     }
   }
 }
