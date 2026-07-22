@@ -121,9 +121,9 @@ export class ArticleController {
       });
 
       res.status(201).json({ message: "Artigo criado com sucesso!", article });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Erro interno ao criar o artigo." });
+    } catch (error: any) {
+      console.error("Erro ao criar artigo:", error);
+      res.status(500).json({ error: error?.message || "Erro interno ao criar o artigo." });
     }
   }
 
@@ -159,9 +159,9 @@ export class ArticleController {
       });
 
       res.status(200).json({ message: "Artigo atualizado com sucesso!", article: updatedArticle });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Erro interno ao atualizar o artigo." });
+    } catch (error: any) {
+      console.error("Erro ao atualizar artigo:", error);
+      res.status(500).json({ error: error?.message || "Erro interno ao atualizar o artigo." });
     }
   }
 

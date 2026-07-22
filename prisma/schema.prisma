@@ -19,7 +19,7 @@ model Article {
   id          Int      @id @default(autoincrement())
   title       String
   content     String   @db.Text
-  bannerImage Bytes?   
+  bannerImage Bytes?   @db.LongBlob
   publishedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
   authorId    Int
