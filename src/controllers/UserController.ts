@@ -43,7 +43,12 @@ export class UserController {
       });
     } catch (error: any) {
       console.error('Erro em register:', error);
-      res.status(500).json({ error: error?.message || 'Erro interno do servidor.' });
+      const isDbError = String(error?.message).includes('prisma') || String(error?.message).includes('database') || String(error?.message).includes('Can\'t reach');
+      res.status(500).json({ 
+        error: isDbError 
+          ? "Servidor de banco de dados temporariamente indisponível. Tente novamente em instantes." 
+          : (error?.message || 'Erro interno do servidor.') 
+      });
     }
   }
 
@@ -89,7 +94,12 @@ export class UserController {
       });
     } catch (error: any) {
       console.error('Erro em login:', error);
-      res.status(500).json({ error: error?.message || 'Erro interno do servidor.' });
+      const isDbError = String(error?.message).includes('prisma') || String(error?.message).includes('database') || String(error?.message).includes('Can\'t reach');
+      res.status(500).json({ 
+        error: isDbError 
+          ? "Servidor de banco de dados temporariamente indisponível. Tente novamente em instantes." 
+          : (error?.message || 'Erro interno do servidor.') 
+      });
     }
   }
 
@@ -132,7 +142,12 @@ export class UserController {
       res.status(200).json({ message: "Conta excluída com sucesso." });
     } catch (error: any) {
       console.error('Erro ao excluir conta de usuário:', error);
-      res.status(500).json({ error: error?.message || 'Erro ao excluir conta.' });
+      const isDbError = String(error?.message).includes('prisma') || String(error?.message).includes('database') || String(error?.message).includes('Can\'t reach');
+      res.status(500).json({ 
+        error: isDbError 
+          ? "Serviço de banco de dados temporariamente indisponível. Tente novamente em instantes." 
+          : (error?.message || "Erro ao excluir conta.") 
+      });
     }
   }
 }
