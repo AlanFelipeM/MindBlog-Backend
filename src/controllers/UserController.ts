@@ -92,4 +92,31 @@ export class UserController {
       res.status(500).json({ error: error?.message || 'Erro interno do servidor.' });
     }
   }
+
+  // Exclui a conta do usuário autenticado e seus artigos vinculados no banco de dados
+  async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.userId;
+
+      if (!userId) {
+        res.status(401).json({ error: "Usuário não autenticado." });
+        return;
+      }
+
+      // Remove os artigos vinculados ao usuário antes de remover a conta
+      await prisma.article.deleteMany({
+        where: { authorId: userId },
+      });
+
+      // Remove a conta do usuário do banco de dados MySQL
+      await prisma.user.delete({
+        where: { id: userId },
+      });
+
+      res.status(200).json({ message: "Conta excluída com sucesso." });
+    } catch (error: any) {
+      console.error('Erro ao excluir conta de usuário:', error);
+      res.status(500).json({ error: error?.message || 'Erro ao excluir conta.' });
+    }
+  }
 }

@@ -11,9 +11,10 @@ const articleController = new ArticleController();
 // Configura o multer para armazenar as imagens temporariamente na memória (necessário para salvar como BLOB no MySQL)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Rotas de Usuário (Autenticação)
+// Rotas de Usuário (Autenticação e Perfil)
 router.post("/users/register", userController.register);
 router.post("/users/login", userController.login);
+router.delete("/users/me", authMiddleware, userController.delete);
 
 // Rota Pública de Artigos (Qualquer um pode ver a listagem ou um artigo específico)
 router.get("/articles", articleController.index);
