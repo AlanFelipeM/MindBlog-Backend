@@ -4,6 +4,21 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../database/prisma.js";
 
 export class UserController {
+  private formatAvatar(avatarBlob: any): string | null {
+    if (!avatarBlob) return null;
+    const rawStr = Buffer.from(avatarBlob).toString("utf-8");
+    if (
+      rawStr.startsWith("data:") ||
+      rawStr.startsWith("http:") ||
+      rawStr.startsWith("https:") ||
+      rawStr.startsWith("uploads/") ||
+      rawStr.startsWith("/")
+    ) {
+      return rawStr;
+    }
+    return `data:image/jpeg;base64,${Buffer.from(avatarBlob).toString("base64")}`;
+  }
+
   async register(req: Request, res: Response): Promise<void> {
     try {
       const { name, email, password } = req.body;
@@ -39,7 +54,7 @@ export class UserController {
 
       res.status(201).json({
         message: "Usuário criado com sucesso!",
-        user: userWithoutPassword,
+        user: { ...userWithoutPassword, avatar: this.formatAvatar(user.avatar) },
       });
     } catch (error: any) {
       console.error('Erro em register:', error);
@@ -89,7 +104,7 @@ export class UserController {
 
       res.status(200).json({
         message: "Login realizado com sucesso!",
-        user: userWithoutPassword,
+        user: { ...userWithoutPassword, avatar: this.formatAvatar(user.avatar) },
         token,
       });
     } catch (error: any) {
@@ -144,6 +159,46 @@ export class UserController {
     } catch (error: any) {
       console.error('Erro ao excluir conta de usuário:', error);
       res.status(500).json({ error: "Erro ao excluir conta do sistema: " + (error?.message || '') });
+    }
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.userId;
+      const { name, avatar } = req.body;
+
+      if (!userId) {
+        res.status(401).json({ error: "Usuário não autenticado." });
+        return;
+      }
+
+      const dataToUpdate: any = {};
+      if (name) dataToUpdate.name = name;
+
+      if (req.file) {
+        dataToUpdate.avatar = new Uint8Array(req.file.buffer);
+      } else if (avatar !== undefined) {
+        if (avatar === null || avatar === '') {
+          dataToUpdate.avatar = null;
+        } else {
+          dataToUpdate.avatar = Buffer.from(String(avatar), "utf-8");
+        }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: dataToUpdate,
+      });
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+
+      res.status(200).json({
+        message: "Perfil atualizado com sucesso!",
+        user: { ...userWithoutPassword, avatar: this.formatAvatar(updatedUser.avatar) },
+      });
+    } catch (error: any) {
+      console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ error: error?.message || "Erro interno ao atualizar o perfil." });
     }
   }
 }

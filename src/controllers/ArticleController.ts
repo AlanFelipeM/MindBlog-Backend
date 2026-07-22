@@ -8,7 +8,7 @@ export class ArticleController {
         orderBy: { publishedAt: "desc" },
         include: {
           author: {
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true, email: true, avatar: true },
           },
         },
       });
@@ -30,9 +30,29 @@ export class ArticleController {
             finalImage = `data:image/jpeg;base64,${Buffer.from(article.bannerImage).toString("base64")}`;
           }
         }
+        let finalAvatar = null;
+        if (article.author?.avatar) {
+          const rawAvStr = Buffer.from(article.author.avatar).toString("utf-8");
+          if (
+            rawAvStr.startsWith("data:") ||
+            rawAvStr.startsWith("http:") ||
+            rawAvStr.startsWith("https:") ||
+            rawAvStr.startsWith("uploads/") ||
+            rawAvStr.startsWith("/")
+          ) {
+            finalAvatar = rawAvStr;
+          } else {
+            finalAvatar = `data:image/jpeg;base64,${Buffer.from(article.author.avatar).toString("base64")}`;
+          }
+        }
+
         return {
           ...article,
           bannerImage: finalImage,
+          author: {
+            ...article.author,
+            avatar: finalAvatar,
+          },
         };
       });
 
@@ -51,7 +71,7 @@ export class ArticleController {
         where: { id: Number(id) },
         include: {
           author: {
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true, email: true, avatar: true },
           },
         },
       });
@@ -77,9 +97,29 @@ export class ArticleController {
         }
       }
 
+      let finalAvatar = null;
+      if (article.author?.avatar) {
+        const rawAvStr = Buffer.from(article.author.avatar).toString("utf-8");
+        if (
+          rawAvStr.startsWith("data:") ||
+          rawAvStr.startsWith("http:") ||
+          rawAvStr.startsWith("https:") ||
+          rawAvStr.startsWith("uploads/") ||
+          rawAvStr.startsWith("/")
+        ) {
+          finalAvatar = rawAvStr;
+        } else {
+          finalAvatar = `data:image/jpeg;base64,${Buffer.from(article.author.avatar).toString("base64")}`;
+        }
+      }
+
       const formattedArticle = {
         ...article,
         bannerImage: finalImage,
+        author: {
+          ...article.author,
+          avatar: finalAvatar,
+        },
       };
 
       res.status(200).json(formattedArticle);
