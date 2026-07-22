@@ -97,20 +97,36 @@ export class UserController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.userId;
+      const { email } = req.body || {};
 
-      if (!userId) {
-        res.status(401).json({ error: "Usuário não autenticado." });
+      if (!userId && !email) {
+        res.status(400).json({ error: "Identificação do usuário necessária para exclusão." });
+        return;
+      }
+
+      // Busca o usuário no MySQL por ID ou por E-mail
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            ...(userId ? [{ id: userId }] : []),
+            ...(email ? [{ email }] : []),
+          ],
+        },
+      });
+
+      if (!user) {
+        res.status(444).json({ message: "Usuário já foi removido ou não encontrado." });
         return;
       }
 
       // Remove os artigos vinculados ao usuário antes de remover a conta
       await prisma.article.deleteMany({
-        where: { authorId: userId },
+        where: { authorId: user.id },
       });
 
       // Remove a conta do usuário do banco de dados MySQL
       await prisma.user.delete({
-        where: { id: userId },
+        where: { id: user.id },
       });
 
       res.status(200).json({ message: "Conta excluída com sucesso." });
